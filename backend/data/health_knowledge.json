@@ -1,0 +1,66 @@
+[
+  {
+    "content": "高血压患者的饮食建议：减少钠盐摄入，每日不超过5克；增加钾的摄入，多吃蔬菜水果；控制体重，保持BMI在正常范围；限制饮酒；采用DASH饮食（多吃全谷物、蔬菜、水果、低脂奶制品）。世界卫生组织建议成年人每日钠摄入量应低于2克。",
+    "source_url": "https://www.who.int/health-topics/hypertension",
+    "source_name": "世界卫生组织 WHO",
+    "publication_date": "2024-01-15",
+    "title": "高血压预防与饮食指南",
+    "document_type": "guideline"
+  },
+  {
+    "content": "发烧的常见原因包括感染（病毒或细菌）、炎症、药物反应等。一般建议：体温38.5°C以下可物理降温；38.5°C以上可考虑服用退热药如对乙酰氨基酚或布洛芬。儿童用药需按体重计算剂量。如持续高热超过3天或伴有严重症状，应及时就医。",
+    "source_url": "https://www.mayoclinic.org/fever",
+    "source_name": "Mayo Clinic",
+    "publication_date": "2023-08-20",
+    "title": "发烧的症状与治疗",
+    "document_type": "health_article"
+  },
+  {
+    "content": "头痛的常见类型：紧张性头痛（头周箍紧感）、偏头痛（单侧搏动性痛）、丛集性头痛（眼周剧烈疼痛）。太阳穴附近跳痛常与偏头痛或紧张性头痛相关。缓解方法：休息、冷敷、避免强光噪音；可服用非处方止痛药。反复发作或剧烈头痛应就医检查。",
+    "source_url": "https://www.cdc.gov/headaches",
+    "source_name": "美国疾控中心 CDC",
+    "publication_date": "2023-06-10",
+    "title": "头痛类型与自我管理",
+    "document_type": "fact sheet"
+  },
+  {
+    "content": "腹痛可能由消化不良、肠胃炎、便秘等引起。轻度腹痛可先观察：避免油腻辛辣食物，少量多餐，适当补充水分。若伴发热、持续加重、呕吐、便血等应尽快就医。儿童腹痛需特别谨慎，不明原因腹痛不建议自行用药。",
+    "source_url": "https://www.healthline.com/abdominal-pain",
+    "source_name": "Healthline",
+    "publication_date": "2023-05-01",
+    "title": "腹痛的常见原因与应对",
+    "document_type": "health_article"
+  },
+  {
+    "content": "感冒是上呼吸道病毒感染，多为自限性疾病。建议：多休息、多饮水；可服用对症药物如退热药、止咳药；抗生素对病毒无效，切勿滥用。一般7-10天可自愈。若出现高热不退、呼吸困难、持续咳嗽超过2周应就医。",
+    "source_url": "https://www.cdc.gov/flu",
+    "source_name": "美国疾控中心 CDC",
+    "publication_date": "2024-01-01",
+    "title": "感冒与流感指南",
+    "document_type": "guideline"
+  },
+  {
+    "content": "糖尿病患者饮食管理要点：控制总热量，均衡营养；选择低血糖指数食物；定时定量进餐；限制精制糖和饱和脂肪。WHO建议成年人游离糖摄入不超过总能量的10%。规律运动有助于血糖控制。",
+    "source_url": "https://www.who.int/diabetes",
+    "source_name": "世界卫生组织 WHO",
+    "publication_date": "2023-11-20",
+    "title": "糖尿病饮食建议",
+    "document_type": "guideline"
+  },
+  {
+    "content": "失眠的应对策略：建立规律作息；睡前避免咖啡因和屏幕；营造适宜睡眠环境；可尝试放松技巧如深呼吸。短期失眠可考虑非处方助眠产品，但不宜长期使用。慢性失眠建议咨询医生，排除躯体或心理疾病。",
+    "source_url": "https://www.mayoclinic.org/sleep",
+    "source_name": "Mayo Clinic",
+    "publication_date": "2023-09-15",
+    "title": "失眠与睡眠卫生",
+    "document_type": "health_article"
+  },
+  {
+    "content": "咳嗽分为急性（3周内）和慢性。急性咳嗽多由感冒引起，可多饮水、蜂蜜水缓解。止咳药需根据是否有痰选择。咳嗽超过3周或伴咯血、发热、气促应就医。儿童咳嗽需谨慎使用镇咳药，应遵医嘱。",
+    "source_url": "https://www.medlineplus.gov/cough.html",
+    "source_name": "MedlinePlus",
+    "publication_date": "2023-04-01",
+    "title": "咳嗽的自我管理",
+    "document_type": "health_article"
+  }
+]

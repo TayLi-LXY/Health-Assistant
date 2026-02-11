@@ -1,0 +1,44 @@
+# ========================
+# 1. 安全类 (绝对不能传！)
+# ========================
+.env
+backend/.env
+frontend/.env
+*.key
+secrets.py
+
+# ========================
+# 2. Python 后端垃圾文件
+# ========================
+# 虚拟环境 (这个超大，别人用 requirements.txt 自己装)
+venv/
+.venv/
+env/
+
+# 编译缓存 (系统自动生成的)
+__pycache__/
+*.pyc
+
+# ========================
+# 3. 前端 Node.js 垃圾文件
+# ========================
+# 依赖包 (这个更是重量级，甚至几百兆，绝对不能传)
+node_modules/
+frontend/node_modules/
+
+# 构建打包后的产物 (dist 目录)
+dist/
+build/
+.output/
+
+# npm 报错日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================
+# 4. 系统和编辑器缓存
+# ========================
+.DS_Store
+.idea/
+.vscode/
