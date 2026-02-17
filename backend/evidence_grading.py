@@ -29,7 +29,9 @@ AUTHORITY_SCORES = {
     "baikemy.com": 65,
     "chunyuyisheng.com": 60,
     "wiki.cn": 55,
-    # Level 1: 默认/未知来源
+    "baike.baidu.com": 52,
+    # Level 1: 社区/论坛/偏方
+    "tieba.baidu.com": 35,
     "default": 40,
 }
 
@@ -41,6 +43,8 @@ DOC_TYPE_BONUS = {
     "clinical trial": 10,      # 临床试验
     "fact sheet": 8,           # 事实清单
     "official": 10,            # 官方发布
+    "encyclopedia": 5,         # 百科
+    "forum_post": -5,          # 论坛帖（降分）
 }
 
 

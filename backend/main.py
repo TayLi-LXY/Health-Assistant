@@ -3,8 +3,12 @@
 FastAPI 主入口
 """
 import uuid
+from pathlib import Path
 from dotenv import load_dotenv
-load_dotenv()
+
+# 显式从 backend/.env 加载配置，避免依赖当前工作目录
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 

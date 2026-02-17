@@ -21,3 +21,9 @@ pydantic-settings>=2.1.0
 
 # CORS
 python-multipart>=0.0.6
+
+# Crawler (知识库爬虫)
+aiohttp>=3.9.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+dateparser>=1.2.0
