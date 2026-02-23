@@ -35,7 +35,7 @@ AUTHORITY_SCORES = {
     "default": 40,
 }
 
-# 文档类型关键词加分
+# 文档类型关键词加分（用于 title+content 文本匹配）
 DOC_TYPE_BONUS = {
     "guideline": 15,           # 临床指南
     "systematic review": 12,   # 系统综述
@@ -45,6 +45,20 @@ DOC_TYPE_BONUS = {
     "official": 10,            # 官方发布
     "encyclopedia": 5,         # 百科
     "forum_post": -5,          # 论坛帖（降分）
+}
+
+# 元数据 document_type 字段直接映射（优先使用）
+DOC_TYPE_FROM_META = {
+    "guideline": 15,
+    "systematic_review": 12,
+    "meta_analysis": 12,
+    "clinical_trial": 10,
+    "fact_sheet": 8,
+    "official": 10,
+    "encyclopedia": 5,
+    "forum_post": -5,
+    "news": 3,
+    "unknown": 0,
 }
 
 
@@ -120,16 +134,28 @@ def _get_recency_score(publication_date: str) -> Tuple[float, str]:
         return 70, "时效性默认得分: 70/100"
 
 
-def _get_doc_type_bonus(title: str, content: str) -> Tuple[float, str]:
-    """基于文档类型给予额外加分"""
-    text = f"{(title or '')} {(content or '')}".lower()
+def _get_doc_type_bonus(title: str, content: str, document_type: str = "") -> Tuple[float, str]:
+    """
+    基于文档类型给予额外加分
+    优先使用元数据 document_type 映射，再与关键词匹配结果取较大值
+    """
     bonus = 0
     matched = []
+
+    # 1. 优先使用元数据 document_type
+    if document_type:
+        meta_key = str(document_type).lower().strip().replace(" ", "_")
+        bonus = DOC_TYPE_FROM_META.get(meta_key, DOC_TYPE_FROM_META.get("unknown", 0))
+        if bonus != 0:
+            matched.append(f"元数据:{document_type}")
+
+    # 2. 关键词匹配（与元数据结果取较大值）
+    text = f"{(title or '')} {(content or '')}".lower()
     for keyword, points in DOC_TYPE_BONUS.items():
-        if keyword in text:
-            bonus = max(bonus, points)
+        if keyword in text and points > bonus:
+            bonus = points
             matched.append(keyword)
-    
+
     explanation = f"文档类型加分: +{bonus} ({', '.join(matched) if matched else '无'})"
     return bonus, explanation
 
@@ -157,7 +183,7 @@ def compute_evidence_grade(
     """
     auth_score, auth_exp = _get_authority_score(source_url, source_name)
     rec_score, rec_exp = _get_recency_score(publication_date or "")
-    doc_bonus, doc_exp = _get_doc_type_bonus(title, content)
+    doc_bonus, doc_exp = _get_doc_type_bonus(title, content, document_type or "")
     
     # 加权计算 (文档类型 bonus 按20分制折算)
     total = auth_score * 0.5 + rec_score * 0.3 + min(doc_bonus, 20) * 0.2

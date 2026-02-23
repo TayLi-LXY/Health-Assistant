@@ -85,8 +85,9 @@ def grade_and_format_evidences(chunks: List[dict]) -> List[EvidenceItem]:
             content=meta.get("content", c.get("content", "")),
             source_url=meta.get("source_url", ""),
             source_name=meta.get("source_name", ""),
-            publication_date=meta.get("publication_date"),
+            publication_date=meta.get("publication_date") or None,
             title=meta.get("title", ""),
+            document_type=meta.get("document_type", ""),
         )
         evidences.append(EvidenceItem(
             content=meta.get("content", c.get("content", "")),

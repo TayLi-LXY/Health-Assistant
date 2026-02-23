@@ -90,6 +90,17 @@ cd backend
 python -c "from knowledge_base.builder import build_vector_store; build_vector_store()"
 ```
 
+### 5. 运行测试
+
+运行任务二（证据分级机制）自动化测试：
+
+```bash
+cd backend
+python tests/test_task2_evidence_grading.py
+```
+
+测试覆盖：证据分级算法、等级映射、元数据传递、builder metadata 结构等。
+
 ## 配置说明
 
 在 `backend/.env` 中配置：

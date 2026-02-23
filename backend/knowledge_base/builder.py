@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from tqdm import tqdm  # 引入进度条库
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
@@ -193,6 +193,8 @@ def build_vector_store(
         for c in batch:
             batch_metadatas.append({
                 "source_url": c.get("source_url", "") or "",
+                "source_name": c.get("source_name", "") or "",
+                "publication_date": str(c.get("publication_date") or ""),
                 "title": c.get("title", "") or "",
                 "chunk_id": c.get("chunk_id", "") or "",
                 "chunk_index": c.get("chunk_index", 0),
