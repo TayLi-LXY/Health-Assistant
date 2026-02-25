@@ -3,17 +3,13 @@
 FastAPI 主入口
 """
 import uuid
-from pathlib import Path
 from dotenv import load_dotenv
-
-# 显式从 backend/.env 加载配置，避免依赖当前工作目录
-BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(BASE_DIR / ".env")
+load_dotenv()
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from models import ChatRequest, ChatMessage, MessageRole, EvidenceItem, EvidenceLevel
-from dialogue_manager import DialogueManager
+from dialogue_manager import EnhancedDialogueManager
 from rag_pipeline import run_rag_pipeline
 
 app = FastAPI(
@@ -29,8 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-dm = DialogueManager()
-
+dm =EnhancedDialogueManager()
 
 @app.get("/")
 def root():
@@ -85,6 +80,15 @@ def chat(req: ChatRequest):
             "evidences": [],
             "disclaimer": "本系统为课程设计原型，其提供的信息仅供学术研究和参考，不能作为专业的医疗诊断和治疗建议。如有任何健康问题，请务必咨询执业医师。",
         }
+    elif not needs_clarification and clarification_q and clarification_q.startswith("【重要安全提醒】"):
+        return {
+            "session_id": session_id,
+            "needs_clarification": False,
+            "clarification_question": None,
+            "answer": clarification_q,  # 将紧急响应作为回答
+            "evidences": [],
+            "disclaimer": "本系统为课程设计原型，其提供的信息仅供学术研究和参考，不能作为专业的医疗诊断和治疗建议。如有任何健康问题，请务必咨询执业医师。",
+        }    
     
     # 执行 RAG
     answer, evidences = run_rag_pipeline(resolved_query or req.message, top_k=5)
