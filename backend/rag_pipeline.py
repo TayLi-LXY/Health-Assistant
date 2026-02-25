@@ -8,7 +8,7 @@ RAG 检索增强生成流程
 import os
 from typing import List, Optional
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from models import EvidenceItem, EvidenceLevel
 from evidence_grading import compute_evidence_grade
