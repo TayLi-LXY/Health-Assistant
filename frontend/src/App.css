@@ -1,11 +1,148 @@
+/* 1. 顶层容器：左右分栏 */
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background: var(--bg-primary);
+}
+
+.sidebar {
+  width: 260px;
+  background: #f4f7fb; /* 稍深的浅蓝灰色区分 */
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1rem;
+  flex-shrink: 0;
+}
+
+.sidebar-header .logo {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  padding-left: 0.5rem;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center; /* 垂直居中对齐图片和文字 */
+  gap: 8px;            /* 图片和文字之间的间距 */
+  margin-bottom: 1.5rem;
+  padding-left: 0.5rem;
+}
+
+.sidebar-logo {
+  width: 32px;         /* 根据需要调整 Logo 宽度 */
+  height: 32px;        /* 根据需要调整 Logo 高度 */
+  object-fit: contain; /* 保持图片比例 */
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--accent); /* 使用你定义的蓝色 */
+}
+
+.new-chat-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 2rem;
+  transition: all 0.2s;
+}
+
+.new-chat-btn:hover {
+  background: var(--bg-secondary);
+  border-color: var(--accent);
+}
+
+.history-list {
+  flex: 1;
+  overflow-y: auto;
+  /* 使用之前定义的细滚动条 */
+  scrollbar-width: thin;
+}
+
+.history-group {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+  padding-left: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.history-item {
+  padding: 0.75rem;
+  border-radius: 10px;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.history-item:hover {
+  background: #e2e8f0;
+}
+
+.item-title {
+  font-size: 0.9rem;
+  color: #334155;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-history {
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  text-align: center;
+}
+
+.history-item.active {
+  background: #e0eaff; /* 稍深的蓝色背景 */
+  border-left: 4px solid var(--accent); /* 左侧醒目色条 */
+}
+
+.history-item.active .item-title {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.history-item.active .item-icon {
+  filter: brightness(0.8);
+}
+
+/* 应用根容器：布局为垂直弹性盒，控制整体宽高和居中 */
+/*
 .app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   max-width: 900px;
   margin: 0 auto;
+}*/
+.app {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 900px;
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--bg-primary);
 }
 
+/* 页面头部容器：控制内边距、文本对齐和底部边框 */
 .header {
   padding: 1.5rem;
   background: var(--bg-secondary);
@@ -13,6 +150,7 @@
   text-align: center;
 }
 
+/* 头部主标题样式 */
 .header h1 {
   font-size: 1.5rem;
   font-weight: 600;
@@ -20,29 +158,68 @@
   margin-bottom: 0.25rem;
 }
 
+/* 头部副标题样式 */
 .header p {
   font-size: 0.875rem;
   color: var(--text-secondary);
 }
 
+/* 头部免责声明样式 */
 .header .disclaimer-header {
   font-size: 0.75rem;
   color: var(--danger);
   margin-top: 0.5rem;
 }
 
+/* ========== 聊天区域样式 ========== */
+/* 聊天内容区域：弹性盒布局，占满剩余高度 */
+/*
 .chat-area {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
+}*/
+.chat-area {
+  flex: 1;           
+  overflow-y: auto;  
+  padding: 1rem;
+  display: flex;    
+  flex-direction: column;
 }
 
+.chat-area::-webkit-scrollbar {
+  width: 6px;               /* 纵向滚动条宽度 */
+  height: 6px;              /* 横向滚动条高度 */
+}
+
+.chat-area::-webkit-scrollbar-track {
+  background: transparent;  /* 滚动条轨道背景：透明 */
+}
+
+.chat-area::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1); /* 滚动条滑块颜色：浅灰色半透明 */
+  border-radius: 10px;      /* 滑块圆角 */
+}
+
+.chat-area::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2); /* 鼠标悬停时稍微加深 */
+}
+
+/* 消息列表容器：可滚动区域，控制内边距和高度 */
+/*
 .messages {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}*/
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex-shrink: 0;
 }
 
+/* 初始欢迎语样式：无消息时显示 */
 .welcome {
   text-align: center;
   padding: 2rem 1rem;
@@ -60,6 +237,8 @@
   color: var(--accent-dim);
 }
 
+/* ========== 消息气泡样式 ========== */
+/* 通用消息气泡：基础样式 */
 .bubble {
   max-width: 85%;
   padding: 0.75rem 1rem;
@@ -67,27 +246,46 @@
   line-height: 1.6;
 }
 
+/* 用户消息气泡：区分样式 */
+.bubble.user {
+  align-self: flex-end;
+  background: #2563eb; /* 深蓝色背景 */
+  color: #ffffff;      /* 白色字体 */
+}
+/*
 .bubble.user {
   align-self: flex-end;
   background: var(--accent);
   color: var(--bg-primary);
-}
+}*/
 
+/* 助手消息气泡：区分样式 */
+.bubble.assistant {
+  align-self: flex-start;
+  background: #f8fbff; 
+  border: 1px solid #dbeafe; 
+  color: #1a1a1a; 
+}
+/*
 .bubble.assistant {
   align-self: flex-start;
   background: var(--bg-card);
   border: 1px solid var(--border);
-}
+}*/
 
+
+/* 助手加载中动画：三个圆点轮流闪烁 */
 .bubble.loading {
   display: flex;
   gap: 4px;
 }
 
+/* 加载圆点基础样式 */
 .bubble .dot {
   animation: blink 1.4s infinite both;
 }
 
+/* 第二、三个圆点延迟动画 */
 .bubble .dot:nth-child(2) { animation-delay: 0.2s; }
 .bubble .dot:nth-child(3) { animation-delay: 0.4s; }
 
@@ -180,20 +378,24 @@
   40% { opacity: 1; }
 }
 
+/* ========== 证据面板样式 ========== */
+/* 证据面板容器：分隔样式 */
 .evidences-panel {
   margin-top: 1.5rem;
   padding: 1rem;
-  background: var(--bg-secondary);
+  background: #f0f7ff;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid #dbeafe;
 }
 
+/* 证据面板标题 */
 .evidences-panel h3 {
   font-size: 0.95rem;
   margin-bottom: 1rem;
   color: var(--accent);
 }
 
+/* 单个证据卡片样式 */
 .evidence-card {
   background: var(--bg-card);
   border-radius: 8px;
@@ -202,10 +404,12 @@
   border: 1px solid var(--border);
 }
 
+/* 最后一个卡片取消底部间距 */
 .evidence-card:last-child {
   margin-bottom: 0;
 }
 
+/* 证据卡片头部：等级+来源+按钮 */
 .evidence-header {
   display: flex;
   align-items: center;
@@ -214,6 +418,7 @@
   margin-bottom: 0.5rem;
 }
 
+/* 证据等级徽章样式 */
 .evidence-badge {
   font-size: 0.7rem;
   padding: 0.2rem 0.5rem;
@@ -221,11 +426,13 @@
   font-weight: 600;
 }
 
+/* 证据来源样式 */
 .evidence-source {
   font-size: 0.8rem;
   color: var(--text-secondary);
 }
 
+/* 分级说明按钮样式 */
 .explain-btn {
   margin-left: auto;
   width: 20px;
@@ -239,12 +446,14 @@
   transition: all 0.2s;
 }
 
+/* 说明按钮hover效果：浅背景 */
 .explain-btn:hover {
   background: var(--accent);
   color: var(--bg-primary);
   border-color: var(--accent);
 }
 
+/* 证据分级说明文本样式 */
 .evidence-explanation {
   font-size: 0.8rem;
   color: var(--text-secondary);
@@ -254,22 +463,27 @@
   margin-bottom: 0.5rem;
 }
 
+/* 证据内容文本样式 */
 .evidence-content {
   font-size: 0.9rem;
   line-height: 1.6;
   margin-bottom: 0.5rem;
 }
 
+/* 证据来源链接样式 */
 .evidence-link {
   font-size: 0.8rem;
   color: var(--accent);
   text-decoration: none;
 }
 
+/* 链接hover效果：添加下划线 */
 .evidence-link:hover {
   text-decoration: underline;
 }
 
+/* ========== 免责声明样式 ========== */
+/* 通用免责声明样式 */
 .disclaimer {
   margin-top: 1rem;
   padding: 0.75rem 1rem;
@@ -280,33 +494,48 @@
   border-radius: 4px;
 }
 
+/* ========== 输入区域样式 ========== */
+/* 输入区域容器：固定在底部，弹性盒布局 */
+/*
 .input-area {
   display: flex;
   gap: 0.5rem;
   padding: 1rem;
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border);
+  background: #ffffff;
+  border-top: 1px solid #dbeafe;
+}*/
+.input-area {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #ffffff;
+  border-top: 1px solid #dbeafe;
+  flex-shrink: 0;
 }
 
+/* 输入框样式 */
 .input-area input {
   flex: 1;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--border);
+  border: 1px solid #dbeafe;
   border-radius: 8px;
-  background: var(--bg-card);
-  color: var(--text-primary);
+  background: #f0f7ff;
+  color: #1a1a1a;
   font-size: 1rem;
 }
 
+/* 输入框占位符样式：统一颜色 */
 .input-area input::placeholder {
   color: var(--text-secondary);
 }
 
+/* 输入框聚焦样式：边框变色 */
 .input-area input:focus {
   outline: none;
   border-color: var(--accent);
 }
 
+/* 发送按钮样式 */
 .input-area button {
   padding: 0.75rem 1.25rem;
   background: var(--accent);
@@ -318,10 +547,12 @@
   transition: background 0.2s;
 }
 
+/* 按钮hover效果：背景色加深 */
 .input-area button:hover:not(:disabled) {
   background: var(--accent-dim);
 }
 
+/* 按钮禁用样式：弱化视觉 */
 .input-area button:disabled {
   opacity: 0.6;
   cursor: not-allowed;

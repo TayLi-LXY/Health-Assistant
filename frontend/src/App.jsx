@@ -2,8 +2,18 @@ import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import './App.css'
-
+import logoImg from './logo.png'
 const API_BASE = '/api'
+
+
+
+/*
+ * 证据等级徽章组件
+ * @param {Object} props - 组件属性
+ * @param {number} props.level - 证据等级数值（1-4）
+ * @param {string} props.levelName - 证据等级名称（用于title提示）
+ * @returns {JSX.Element} 渲染后的等级徽章
+ */
 
 function EvidenceBadge({ level, levelName }) {
   const levelConfig = {
@@ -23,6 +33,15 @@ function EvidenceBadge({ level, levelName }) {
     </span>
   )
 }
+
+
+/*
+ * 证据卡片组件：展示单条证据的完整信息
+ * @param {Object} props - 组件属性
+ * @param {Object} props.evidence - 单条证据数据
+ * @param {number} props.index - 列表索引（用于key）
+ * @returns {JSX.Element} 渲染后的证据卡片
+ */
 
 function EvidenceCard({ evidence, index }) {
   const [showExplanation, setShowExplanation] = useState(false)
@@ -55,6 +74,14 @@ function EvidenceCard({ evidence, index }) {
   )
 }
 
+
+/*
+ * 聊天消息气泡组件：区分用户/助手消息样式
+ * @param {Object} props - 组件属性
+ * @param {Object} props.msg - 消息对象 {role: 'user'|'assistant', content: string}
+ * @returns {JSX.Element} 渲染后的消息气泡
+ */
+
 function ChatMessageBubble({ msg }) {
   const isUser = msg.role === 'user'
   return (
@@ -72,6 +99,11 @@ function ChatMessageBubble({ msg }) {
   )
 }
 
+/*
+ * 免责声明组件：固定展示医疗免责提示
+ * @returns {JSX.Element} 渲染后的免责声明
+ */
+
 function Disclaimer() {
   return (
     <div className="disclaimer">
@@ -81,6 +113,12 @@ function Disclaimer() {
   )
 }
 
+/*
+ * 根组件：整个健康问答应用的核心逻辑
+ * 包含：聊天交互、API请求、证据展示、状态管理等
+ * @returns {JSX.Element} 渲染后的完整应用
+ */
+
 export default function App() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -89,15 +127,55 @@ export default function App() {
   const [lastWasClarification, setLastWasClarification] = useState(false)
   const [evidences, setEvidences] = useState([])
   const [disclaimer, setDisclaimer] = useState('')
+  const [history, setHistory] = useState([])
+  const [activeChatId, setActiveChatId] = useState(null)
   const scrollRef = useRef(null)
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // --- 新增：点击历史记录跳转 ---
+  const loadChat = (chatId) => {
+    const targetChat = history.find(item => item.id === chatId);
+    if (targetChat) {
+      setActiveChatId(chatId);
+      setMessages(targetChat.messages);
+      setEvidences(targetChat.evidences || []);
+      setDisclaimer(targetChat.disclaimer || '');
+      setSessionId(targetChat.sessionId || null);
+    }
+  };
+
+  // --- 修改开启新对话：清空所有状态 ---
+  const startNewChat = () => {
+    setMessages([]);
+    setSessionId(null);
+    setEvidences([]);
+    setDisclaimer('');
+    setActiveChatId(null);
+  };
+
   const sendMessage = async () => {
     const text = input.trim()
     if (!text || loading) return
+
+    let currentId = activeChatId;
+
+    // 如果是第一条消息，创建新对话记录
+    if (messages.length === 0) {
+      currentId = Date.now().toString();
+      setActiveChatId(currentId);
+      const newHistoryItem = {
+        id: currentId,
+        title: text.substring(0, 15),
+        messages: [{ role: 'user', content: text }],
+        evidences: [],
+        disclaimer: '',
+        sessionId: ''
+      };
+      setHistory(prev => [newHistoryItem, ...prev]);
+    }
 
     setInput('')
     setMessages((prev) => [...prev, { role: 'user', content: text }])
@@ -117,6 +195,30 @@ export default function App() {
       })
       const data = await res.json()
 
+      const newAssistantMsg = { 
+        role: 'assistant', 
+        content: data.needs_clarification ? data.clarification_question : data.answer 
+      };
+
+      // 更新当前视图
+      setMessages(prev => [...prev, newAssistantMsg]);
+      setEvidences(data.evidences || []);
+      setDisclaimer(data.disclaimer || '');
+
+      // --- 关键：将 AI 回复同步更新到 history 数组中 ---
+      setHistory(prev => prev.map(item => {
+        if (item.id === currentId) {
+          return {
+            ...item,
+            messages: [...item.messages, { role: 'user', content: text }, newAssistantMsg],
+            evidences: data.evidences || [],
+            disclaimer: data.disclaimer || '',
+            sessionId: data.session_id
+          };
+        }
+        return item;
+      }));
+      /*
       if (!res.ok) throw new Error(data.detail || '请求失败')
 
       if (data.session_id && !sessionId) setSessionId(data.session_id)
@@ -135,7 +237,7 @@ export default function App() {
         setEvidences(data.evidences || [])
         setDisclaimer(data.disclaimer || '')
         setLastWasClarification(false)
-      }
+      }*/
     } catch (err) {
       setMessages((prev) => [
         ...prev,
@@ -148,7 +250,36 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app-container">
+      <aside className="sidebar">
+        <div className="sidebar-header">
+          <div className="logo-container">
+            <img src={logoImg} alt="Logo" className="sidebar-logo" />
+            <span className="logo-text">健康助手</span>
+          </div>
+          <button className="new-chat-btn" onClick={startNewChat}>＋ 开启新对话</button>
+        </div>
+        
+        <div className="history-list">
+          <div className="history-group">对话记录</div>
+          {history.length === 0 ? (
+            <div className="no-history">暂无记录</div>
+          ) : (
+            history.map(item => (
+              <div 
+                key={item.id} 
+                className={`history-item ${activeChatId === item.id ? 'active' : ''}`} // 动态类名
+                onClick={() => loadChat(item.id)} // 点击跳转
+              >
+                <span className="item-icon">💬</span>
+                <span className="item-title">{item.title}</span>
+              </div>
+            ))
+          )}
+        </div>
+      </aside>
+
+    <main className="app">
       <header className="header">
         <h1>在线健康问答助手</h1>
         <p>基于证据分级与多轮澄清</p>
@@ -202,6 +333,7 @@ export default function App() {
           发送
         </button>
       </footer>
-    </div>
+    </main>
+  </div>
   )
 }
