@@ -171,14 +171,14 @@ MISSING_INFO_PATTERNS = [
      "treatment", ["具体病症"], 0.7),
     
     # 缺乏个人信息
-    (r"(我|本人|患者).*(病|不舒服|有问题)(?!.*(多大|几岁|年龄|性别|男|女))", 
-     "general", ["年龄", "性别"], 0.7),
-    (r"(小孩|孩子|儿童|宝宝|幼儿|婴儿).*(?!.*(多大|几岁|几月|月龄))", 
-     "child", ["确切年龄"], 0.9),
-    (r"(老人|老年|长辈|长者).*(?!.*(多大|年龄|病史|基础病))", 
-     "elderly", ["年龄", "基础疾病"], 0.9),
-    (r"(孕妇|怀孕|孕妈|准妈妈).*(?!.*(孕周|孕期|几月))", 
-     "pregnancy", ["孕周"], 0.9),
+    (r"(我|本人|患者).*(病|不舒服|有问题)(?!.*(多大|几岁|年龄|性别|男|女|[\d一二三四五六七八九十]+岁))", 
+ "general", ["年龄", "性别"], 0.7),
+    (r"(小孩|孩子|儿童|宝宝|幼儿|婴儿).*(?!.*(多大|几岁|几月|月龄|[\d一二三四五六七八九十]+岁|[\d一二三四五六七八九十]+个月|[\d一二三四五六七八九十]+月大))", 
+ "child", ["确切年龄"], 0.9),
+    (r"(老人|老年|长辈|长者).*(?!.*(多大|年龄|病史|基础病|[\d一二三四五六七八九十]+岁|高龄))", 
+ "elderly", ["年龄", "基础疾病"], 0.9),
+    (r"(孕妇|怀孕|孕妈|准妈妈).*(?!.*(孕周|孕期|几月|[\d一二三四五六七八九十]+[个]?月|[\d一二三四五六七八九十]+周))", 
+ "pregnancy", ["孕周"], 0.9),
     
     # 缺乏症状细节
     (r"(疼|痛|痒|肿|红)(?!.*(多久|怎么个|什么样|程度|级别|性质))", 
@@ -338,7 +338,7 @@ def _detect_ambiguity(query: str) -> Tuple[bool, List[Dict]]:
     return len(results) > 0, results
 
 def _detect_missing_info(query: str, conversation_history: List = None, 
-                        symptom_context: str = None) -> Tuple[bool, List[Dict]]:
+                        symptom_context: str = None , user_profile: dict = None) -> Tuple[bool, List[Dict]]:
     """
     检测关键信息缺失
     返回：(是否需要澄清, 缺失信息列表)
@@ -601,13 +601,50 @@ def _detect_missing_info(query: str, conversation_history: List = None,
             if result.get("confidence", 0) > 0.6 and remaining_slots > 0:
                 final_results.append(result)
                 remaining_slots -= 1
-        
-        return len(final_results) > 0, final_results
+    # 去重并排序（按置信度降序）
+    else:
+        # 如果 results 为空，初始化为空列表
+        final_results = []
     
+    # ===================== 用户信息过滤逻辑（现在在正确的位置，总是执行） =====================
+    if user_profile and final_results:  # 只有当有结果需要过滤时才执行
+        filtered_results = []
+        for item in final_results:
+            missing_info_type = item.get("missing_info", "")
+            item_symptom_type = item.get("symptom_type", "")
+            
+            # 标记此缺失项是否已在user_profile中被提供
+            is_info_already_provided = False
+            
+            # 1. 检查"年龄"或"确切年龄"
+            if missing_info_type in ["年龄", "确切年龄"] and user_profile.get("age"):
+                is_info_already_provided = True
+            # 2. 检查"性别"
+            elif missing_info_type == "性别" and user_profile.get("gender"):
+                is_info_already_provided = True
+            # 3. 检查"孕周"（通常孕妇查询会触发）
+            elif missing_info_type == "孕周" and user_profile.get("special_population") == "pregnancy_related":
+                is_info_already_provided = True
+            # 4. 检查"基础疾病"
+            elif missing_info_type == "基础疾病" and user_profile.get("existing_conditions"):
+                is_info_already_provided = True
+            # 5. 检查"过敏史"
+            elif missing_info_type == "过敏史" and user_profile.get("allergy_history"):
+                is_info_already_provided = True
+            
+            # 如果这个信息尚未在user_profile中被记录，则保留此检测结果
+            if not is_info_already_provided:
+                filtered_results.append(item)
+        
+        final_results = filtered_results
+    
+    return len(final_results) > 0, final_results
+        
+        
     return False, []
 
 def _needs_clarification(query: str, turn_count: int, conversation_history: List = None, 
-                        symptom_context: str = None) -> Dict:
+                        symptom_context: str = None , user_profile: dict = None) -> Dict:
     """
     增强版澄清需求检测
     返回：澄清需求结果字典
@@ -682,7 +719,7 @@ def _needs_clarification(query: str, turn_count: int, conversation_history: List
     # 执行所有检测
     vague_intent, vague_results = _detect_vague_intent(query)
     ambiguous, ambiguous_results = _detect_ambiguity(query)
-    missing_info, missing_results = _detect_missing_info(query, conversation_history, symptom_context)
+    missing_info, missing_results = _detect_missing_info(query, conversation_history, symptom_context, user_profile)
     
     # 过滤无关的歧义检测（基于当前症状上下文）
     if symptom_context and ambiguous_results:
@@ -959,8 +996,9 @@ def generate_clarification_question(query: str, session_state: dict, detection_r
     if not detection_result:
         detection_result = _needs_clarification(query, session_state.get("clarification_turns", 0), 
                                               session_state.get("conversation_history", []),
-                                              session_state.get("symptom_type", ""))
-    
+                                              session_state.get("symptom_type", ""),
+                                              user_profile=session_state.get("user_profile", {}))
+                                                
     if detection_result.get("emergency_alert", False):
         # 返回空字符串，表示需要上游进行紧急响应
         return ""
@@ -1168,15 +1206,25 @@ class EnhancedDialogueManager:
         """从查询中提取用户信息"""
         query_lower = query.lower()
         
-        # 提取年龄
         age_patterns = [
-            (r"(\d+)[岁]", "岁"),
-            (r"(\d+)[个]?月", "个月"),
-            (r"(\d+)[天]", "天"),
-            (r"(\d+)[年]龄", "岁"),
-            (r"我(\d+)岁", "岁"),
-            (r"(\d+)岁", "岁")
+            (r"(怀孕|孕)\s*(\d+)\s*个?月", "个月"), # 匹配“怀孕三个月”、“孕3个月”
+            (r"(怀孕|孕)\s*(\d+)\s*周", "周"),     # 匹配“怀孕12周”、“孕12周”
+            (r"(\d+)\s*岁半", "岁"),              # 匹配“3岁半”
+            (r"(\d+)\s*岁多", "岁"),              # 匹配“3岁多”
+            (r"(\d+)\s*岁[了]", "岁"),            # 匹配“3岁了”、“60岁了”
+            (r"(\d+)[岁]", "岁"),                 # 匹配“3岁”、“60岁”
+            (r"([零一二三四五六七八九十百]+)\s*岁", "岁"),  # 新增：匹配“六十岁”、“十二岁”
+            (r"(\d+)[了]", "岁"),                 # 新增：匹配“60了”、“3了”等口语表达
+            (r"(\d+)[个]?月大", "个月"),           # 匹配“3个月大”
+            (r"(\d+)[个]?月", "个月"),            # 匹配“3个月”
+            (r"(\d+)[天]大", "天"),               # 匹配“15天大”
+            (r"我\s*(\d+)\s*岁", "岁"),           # 匹配“我60岁”
+            (r"患者\s*(\d+)\s*岁", "岁"),         # 匹配“患者60岁”
+            (r"老人\s*(\d+)\s*岁", "岁"),         # 匹配“老人60岁”
+            (r"小孩\s*(\d+)\s*岁", "岁"),         # 匹配“小孩3岁”
+            (r"(\d+)[年]龄", "岁"),               # 匹配“60年龄”（不常见但容错）
         ]
+            
         
         for pattern, unit in age_patterns:
             match = re.search(pattern, query_lower)
@@ -1477,7 +1525,8 @@ class EnhancedDialogueManager:
                 message, 
                 state["clarification_turns"],
                 state["conversation_history"],
-                state.get("symptom_type", "")
+                state.get("symptom_type", ""),
+                user_profile=state.get("user_profile", {})
             )
             
             state["detection_results"] = detection_result.get("reasons", [])
@@ -1577,7 +1626,8 @@ class EnhancedDialogueManager:
                 combined_query,
                 turn_count + 1,
                 state["conversation_history"],
-                state.get("symptom_type", "")
+                state.get("symptom_type", ""),
+                user_profile=state.get("user_profile", {})
             )
             
             # ===== 在澄清过程中检测到紧急情况 =====
