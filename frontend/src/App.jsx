@@ -144,6 +144,8 @@ export default function App() {
       setEvidences(targetChat.evidences || []);
       setDisclaimer(targetChat.disclaimer || '');
       setSessionId(targetChat.sessionId || null);
+      const lastMsg = targetChat.messages[targetChat.messages.length - 1];
+      setLastWasClarification(lastMsg?.role === 'assistant' && !targetChat.evidences?.length);
     }
   };
 
@@ -194,6 +196,11 @@ export default function App() {
         }),
       })
       const data = await res.json()
+
+      const isClarifying = !!data.needs_clarification;
+      setLastWasClarification(isClarifying); 
+
+      if (data.session_id) setSessionId(data.session_id);
 
       const newAssistantMsg = { 
         role: 'assistant', 
