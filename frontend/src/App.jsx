@@ -1,11 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import './App.css'
-import logoImg from './logo.png'
-const API_BASE = '/api'
-
-
+import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import "./App.css";
+import logoImg from "./logo.png";
+const API_BASE = "/api";
 
 /*
  * 证据等级徽章组件
@@ -17,23 +15,22 @@ const API_BASE = '/api'
 
 function EvidenceBadge({ level, levelName }) {
   const levelConfig = {
-    4: { color: 'var(--evidence-high)', label: '高' },
-    3: { color: 'var(--evidence-medium)', label: '中' },
-    2: { color: 'var(--evidence-low)', label: '低' },
-    1: { color: 'var(--evidence-very-low)', label: '参考' },
-  }
-  const cfg = levelConfig[level] || levelConfig[1]
+    4: { color: "var(--evidence-high)", label: "高" },
+    3: { color: "var(--evidence-medium)", label: "中" },
+    2: { color: "var(--evidence-low)", label: "低" },
+    1: { color: "var(--evidence-very-low)", label: "参考" },
+  };
+  const cfg = levelConfig[level] || levelConfig[1];
   return (
     <span
       className="evidence-badge"
-      style={{ backgroundColor: cfg.color, color: 'var(--bg-primary)' }}
+      style={{ backgroundColor: cfg.color, color: "var(--bg-primary)" }}
       title={`证据等级 Level ${level}: ${levelName}`}
     >
       Level {level} · {cfg.label}
     </span>
-  )
+  );
 }
-
 
 /*
  * 证据卡片组件：展示单条证据的完整信息
@@ -44,11 +41,14 @@ function EvidenceBadge({ level, levelName }) {
  */
 
 function EvidenceCard({ evidence, index }) {
-  const [showExplanation, setShowExplanation] = useState(false)
+  const [showExplanation, setShowExplanation] = useState(false);
   return (
     <div className="evidence-card">
       <div className="evidence-header">
-        <EvidenceBadge level={evidence.evidence_level} levelName={evidence.evidence_level_name} />
+        <EvidenceBadge
+          level={evidence.evidence_level}
+          levelName={evidence.evidence_level_name}
+        />
         <span className="evidence-source">
           {evidence.source_name}
           {evidence.publication_date && ` · ${evidence.publication_date}`}
@@ -66,14 +66,18 @@ function EvidenceCard({ evidence, index }) {
       )}
       <p className="evidence-content">{evidence.content}</p>
       {evidence.source_url && (
-        <a href={evidence.source_url} target="_blank" rel="noopener noreferrer" className="evidence-link">
+        <a
+          href={evidence.source_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="evidence-link"
+        >
           查看来源 →
         </a>
       )}
     </div>
-  )
+  );
 }
-
 
 /*
  * 聊天消息气泡组件：区分用户/助手消息样式
@@ -83,9 +87,9 @@ function EvidenceCard({ evidence, index }) {
  */
 
 function ChatMessageBubble({ msg }) {
-  const isUser = msg.role === 'user'
+  const isUser = msg.role === "user";
   return (
-    <div className={`bubble ${isUser ? 'user' : 'assistant'}`}>
+    <div className={`bubble ${isUser ? "user" : "assistant"}`}>
       <div className="bubble-content">
         {isUser ? (
           msg.content
@@ -96,7 +100,7 @@ function ChatMessageBubble({ msg }) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 /*
@@ -110,7 +114,7 @@ function Disclaimer() {
       <strong>免责声明：</strong>
       本系统为课程设计原型，其提供的信息仅供学术研究和参考，不能作为专业的医疗诊断和治疗建议。如有任何健康问题，请务必咨询执业医师。
     </div>
-  )
+  );
 }
 
 /*
@@ -120,32 +124,34 @@ function Disclaimer() {
  */
 
 export default function App() {
-  const [messages, setMessages] = useState([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [sessionId, setSessionId] = useState(null)
-  const [lastWasClarification, setLastWasClarification] = useState(false)
-  const [evidences, setEvidences] = useState([])
-  const [disclaimer, setDisclaimer] = useState('')
-  const [history, setHistory] = useState([])
-  const [activeChatId, setActiveChatId] = useState(null)
-  const scrollRef = useRef(null)
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const [lastWasClarification, setLastWasClarification] = useState(false);
+  const [evidences, setEvidences] = useState([]);
+  const [disclaimer, setDisclaimer] = useState("");
+  const [history, setHistory] = useState([]);
+  const [activeChatId, setActiveChatId] = useState(null);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   // --- 新增：点击历史记录跳转 ---
   const loadChat = (chatId) => {
-    const targetChat = history.find(item => item.id === chatId);
+    const targetChat = history.find((item) => item.id === chatId);
     if (targetChat) {
       setActiveChatId(chatId);
       setMessages(targetChat.messages);
       setEvidences(targetChat.evidences || []);
-      setDisclaimer(targetChat.disclaimer || '');
+      setDisclaimer(targetChat.disclaimer || "");
       setSessionId(targetChat.sessionId || null);
       const lastMsg = targetChat.messages[targetChat.messages.length - 1];
-      setLastWasClarification(lastMsg?.role === 'assistant' && !targetChat.evidences?.length);
+      setLastWasClarification(
+        lastMsg?.role === "assistant" && !targetChat.evidences?.length,
+      );
     }
   };
 
@@ -154,77 +160,92 @@ export default function App() {
     setMessages([]);
     setSessionId(null);
     setEvidences([]);
-    setDisclaimer('');
+    setDisclaimer("");
     setActiveChatId(null);
   };
 
   const sendMessage = async () => {
-    const text = input.trim()
-    if (!text || loading) return
+    const text = input.trim();
+    if (!text || loading) return;
 
     let currentId = activeChatId;
+    let isNewChat = false;
 
     // 如果是第一条消息，创建新对话记录
     if (messages.length === 0) {
       currentId = Date.now().toString();
       setActiveChatId(currentId);
+      isNewChat = true;
       const newHistoryItem = {
         id: currentId,
         title: text.substring(0, 15),
-        messages: [{ role: 'user', content: text }],
+        messages: [], // 初始为空，稍后统一添加
         evidences: [],
-        disclaimer: '',
-        sessionId: ''
+        disclaimer: "",
+        sessionId: "",
       };
-      setHistory(prev => [newHistoryItem, ...prev]);
+      setHistory((prev) => [newHistoryItem, ...prev]);
     }
 
-    setInput('')
-    setMessages((prev) => [...prev, { role: 'user', content: text }])
-    setLoading(true)
-    setEvidences([])
+    setInput("");
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
+    setLoading(true);
+    setEvidences([]);
 
     try {
       const res = await fetch(`${API_BASE}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          session_id: sessionId || '',
+          session_id: sessionId || "",
           message: text,
           conversation_history: messages,
           is_clarification_response: lastWasClarification,
         }),
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
 
       const isClarifying = !!data.needs_clarification;
-      setLastWasClarification(isClarifying); 
+      setLastWasClarification(isClarifying);
 
       if (data.session_id) setSessionId(data.session_id);
 
-      const newAssistantMsg = { 
-        role: 'assistant', 
-        content: data.needs_clarification ? data.clarification_question : data.answer 
+      const newAssistantMsg = {
+        role: "assistant",
+        content: data.needs_clarification
+          ? data.clarification_question
+          : data.answer,
       };
 
       // 更新当前视图
-      setMessages(prev => [...prev, newAssistantMsg]);
+      setMessages((prev) => [...prev, newAssistantMsg]);
       setEvidences(data.evidences || []);
-      setDisclaimer(data.disclaimer || '');
+      setDisclaimer(data.disclaimer || "");
 
-      // --- 关键：将 AI 回复同步更新到 history 数组中 ---
-      setHistory(prev => prev.map(item => {
-        if (item.id === currentId) {
-          return {
-            ...item,
-            messages: [...item.messages, { role: 'user', content: text }, newAssistantMsg],
-            evidences: data.evidences || [],
-            disclaimer: data.disclaimer || '',
-            sessionId: data.session_id
-          };
-        }
-        return item;
-      }));
+      // --- 修复：更新 history，避免重复添加消息 ---
+      setHistory((prev) =>
+        prev.map((item) => {
+          if (item.id === currentId) {
+            // 如果是新对话，直接设置消息；否则追加到现有消息
+            const updatedMessages = isNewChat
+              ? [{ role: "user", content: text }, newAssistantMsg]
+              : [
+                  ...item.messages,
+                  { role: "user", content: text },
+                  newAssistantMsg,
+                ];
+
+            return {
+              ...item,
+              messages: updatedMessages,
+              evidences: data.evidences || [],
+              disclaimer: data.disclaimer || "",
+              sessionId: data.session_id,
+            };
+          }
+          return item;
+        }),
+      );
       /*
       if (!res.ok) throw new Error(data.detail || '请求失败')
 
@@ -248,13 +269,13 @@ export default function App() {
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: `错误：${err.message}` },
-      ])
-      setLastWasClarification(false)
+        { role: "assistant", content: `错误：${err.message}` },
+      ]);
+      setLastWasClarification(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="app-container">
@@ -264,18 +285,20 @@ export default function App() {
             <img src={logoImg} alt="Logo" className="sidebar-logo" />
             <span className="logo-text">健康助手</span>
           </div>
-          <button className="new-chat-btn" onClick={startNewChat}>＋ 开启新对话</button>
+          <button className="new-chat-btn" onClick={startNewChat}>
+            ＋ 开启新对话
+          </button>
         </div>
-        
+
         <div className="history-list">
           <div className="history-group">对话记录</div>
           {history.length === 0 ? (
             <div className="no-history">暂无记录</div>
           ) : (
-            history.map(item => (
-              <div 
-                key={item.id} 
-                className={`history-item ${activeChatId === item.id ? 'active' : ''}`} // 动态类名
+            history.map((item) => (
+              <div
+                key={item.id}
+                className={`history-item ${activeChatId === item.id ? "active" : ""}`} // 动态类名
                 onClick={() => loadChat(item.id)} // 点击跳转
               >
                 <span className="item-icon">💬</span>
@@ -286,61 +309,65 @@ export default function App() {
         </div>
       </aside>
 
-    <main className="app">
-      <header className="header">
-        <h1>在线健康问答助手</h1>
-        <p>基于证据分级与多轮澄清</p>
-        <p className="disclaimer-header">免责声明：本系统仅供学术研究参考，不能替代专业医疗建议，请咨询执业医师。</p>
-      </header>
+      <main className="app">
+        <header className="header">
+          <h1>在线健康问答助手</h1>
+          <p>基于证据分级与多轮澄清</p>
+          <p className="disclaimer-header">
+            免责声明：本系统仅供学术研究参考，不能替代专业医疗建议，请咨询执业医师。
+          </p>
+        </header>
 
-      <main className="chat-area">
-        <div className="messages">
-          {messages.length === 0 && (
-            <div className="welcome">
-              <p>您好！我是健康问答助手，可以为您解答常见健康问题。</p>
-              <p>示例：高血压患者的饮食建议、发烧怎么办、头痛如何缓解</p>
-              <p className="hint">提示：若问题较模糊，我会先向您追问以提供更精准的建议。</p>
-            </div>
-          )}
-          {messages.map((msg, i) => (
-            <ChatMessageBubble key={i} msg={msg} />
-          ))}
-          {loading && (
-            <div className="bubble assistant loading">
-              <span className="dot">.</span>
-              <span className="dot">.</span>
-              <span className="dot">.</span>
-            </div>
-          )}
-          <div ref={scrollRef} />
-        </div>
-
-        {evidences.length > 0 && (
-          <div className="evidences-panel">
-            <h3>参考资料与证据等级</h3>
-            {evidences.map((e, i) => (
-              <EvidenceCard key={i} evidence={e} index={i} />
+        <main className="chat-area">
+          <div className="messages">
+            {messages.length === 0 && (
+              <div className="welcome">
+                <p>您好！我是健康问答助手，可以为您解答常见健康问题。</p>
+                <p>示例：高血压患者的饮食建议、发烧怎么办、头痛如何缓解</p>
+                <p className="hint">
+                  提示：若问题较模糊，我会先向您追问以提供更精准的建议。
+                </p>
+              </div>
+            )}
+            {messages.map((msg, i) => (
+              <ChatMessageBubble key={i} msg={msg} />
             ))}
+            {loading && (
+              <div className="bubble assistant loading">
+                <span className="dot">.</span>
+                <span className="dot">.</span>
+                <span className="dot">.</span>
+              </div>
+            )}
+            <div ref={scrollRef} />
           </div>
-        )}
 
-        {(disclaimer || evidences.length > 0) && <Disclaimer />}
+          {evidences.length > 0 && (
+            <div className="evidences-panel">
+              <h3>参考资料与证据等级</h3>
+              {evidences.map((e, i) => (
+                <EvidenceCard key={i} evidence={e} index={i} />
+              ))}
+            </div>
+          )}
+
+          {(disclaimer || evidences.length > 0) && <Disclaimer />}
+        </main>
+
+        <footer className="input-area">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+            placeholder="输入您的健康问题..."
+            disabled={loading}
+          />
+          <button onClick={sendMessage} disabled={loading}>
+            发送
+          </button>
+        </footer>
       </main>
-
-      <footer className="input-area">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-          placeholder="输入您的健康问题..."
-          disabled={loading}
-        />
-        <button onClick={sendMessage} disabled={loading}>
-          发送
-        </button>
-      </footer>
-    </main>
-  </div>
-  )
+    </div>
+  );
 }

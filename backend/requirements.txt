@@ -14,12 +14,14 @@ sentence-transformers>=2.2.2
 
 # HTTP Client
 httpx>=0.26.0
+requests>=2.31.0
 
 # Utils
 python-dotenv>=1.0.0
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
 jieba>=0.42.1
+tqdm>=4.66.0
 
 # CORS
 python-multipart>=0.0.6
