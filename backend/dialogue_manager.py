@@ -53,12 +53,6 @@ AMBIGUOUS_TERMS = {
         "default_sense": "水果",
         "clarification": "您是指水果苹果还是电子产品苹果？"
     },
-    "血压": {
-        "contexts": ["血压值", "血压状况"],
-        "health_relevant": True,
-        "default_sense": "血压值",
-        "clarification": "您是想咨询血压的测量值还是血压相关的健康状况？"
-    },
     "低血糖": {
         "contexts": ["病症", "检测值"],
         "health_relevant": True,
@@ -219,6 +213,94 @@ def _detect_vague_intent(query: str) -> Tuple[bool, List[Dict]]:
     query_lower = query.strip().lower()
     results = []
     
+    # ============ 新增：明确问题白名单检测 ============
+    # 定义一组明确的健康咨询问题模式，匹配则直接判定为无需澄清
+    CLEAR_INTENT_PATTERNS = {
+        # 1. 特定慢性病管理建议
+        r"高血压(患者)?(的)?(饮食|吃[什么東西]|食物|食谱|推荐)(建议|指导|注意事项|禁忌)?[?？]?$": "hypertension_diet",
+        r"高(患者)?(平时|日常)?(应该|可以|要|需要)?(怎么|如何)?(饮食|吃饭|吃东西|吃)[?？]?$": "hypertension_diet",
+        r"高血压(的)?饮食(有)?(哪些)?(注意|禁忌|原则)[?？]?$": "hypertension_diet",
+        r"高(患者)?适合(吃|食用)?(什么|哪些)(食物|水果|蔬菜)[?？]?$": "hypertension_diet",
+        r"高血压(患者)?不能(吃|食用)?(什么|哪些)(食物|水果|蔬菜)[?？]?$": "hypertension_diet",
+        r"高(患者)?(的)?(运动|锻炼)(建议|指导|方式)[?？]?$": "hypertension_exercise",
+        r"高血压(患者)?(平时)?(可以|适合)?(做)?(什么|哪些)运动[?？]?$": "hypertension_exercise",
+
+        r"糖尿病(患者)?(的)?(饮食|吃[什么東西]|食物|食谱)(建议|指导|注意事项)[?？]?$": "diabetes_diet",
+        r"糖尿病(患者)?(的)?(运动|锻炼)(建议|指导)[?？]?$": "diabetes_exercise",
+        r"糖尿病(患者)?(的)?(血糖|血糖值)(监测|测量|控制)(方法|频率)[?？]?$": "diabetes_monitoring",
+
+        r"高血脂(患者)?(的)?(饮食|吃[什么東西]|食物)(建议|指导|注意事项)[?？]?$": "hyperlipidemia_diet",
+        r"胆固醇高(的)?(人)?(应该|可以)?(吃|不吃)(什么|哪些)(东西|食物)[?？]?$": "hyperlipidemia_diet",
+
+        r"痛风(患者)?(的)?(饮食|吃[什么東西]|食物|禁忌)(建议|指导|注意事项)[?？]?$": "gout_diet",
+        r"痛风(患者)?不能(吃|喝)(什么|哪些)(食物|东西|酒)[?？]?$": "gout_diet",
+
+        # 2. 常见症状/小病的通用处理建议
+        r"(普通)?感冒(了)?(应该|可以)?(吃|用)(什么|哪种)药[?？]?$": "common_cold_medication",
+        r"感冒(了)?(有)?(哪些)?(注意|护理)事项[?？]?$": "common_cold_care",
+        r"感冒(了)?(可以|需要)?(多)?喝(什么|点)水[?？]?$": "common_cold_care",
+
+        r"发烧(了)?(应该|可以)?(吃|用)(什么|哪种)(退烧药|药)[?？]?$": "fever_medication",
+        r"发烧(了)?(应该)?(怎么|如何)物理降温[?？]?$": "fever_care",
+
+        r"咳嗽(了)?(应该|可以)?(吃|用)(什么|哪种)(止咳药|药)[?？]?$": "cough_medication",
+        r"(干咳|有痰)(应该)?(吃|用)(什么|哪种)药[?？]?$": "cough_medication",
+
+        r"拉肚子|腹泻(了)?(应该|可以)?(吃|用)(什么|哪种)药[?？]?$": "diarrhea_medication",
+        r"拉肚子|腹泻(了)?(应该)?(吃|喝)(什么|点)(东西|食物|水)[?？]?$": "diarrhea_diet",
+
+        r"便秘(了)?(应该|可以)?(吃|用)(什么|哪种)药[?？]?$": "constipation_medication",
+        r"便秘(了)?(应该)?(吃|多吃)(什么|哪些)(食物|水果)[?？]?$": "constipation_diet",
+
+        r"口腔溃疡(应该|可以)?(用|吃)(什么|哪种)药[?？]?$": "mouth_ulcer_medication",
+
+        # 3. 营养与保健品咨询
+        r"(平时)?(应该)?(怎么|如何)补钙[?？]?$": "calcium_supplement",
+        r"(吃|补)钙(应该)?(吃|选)(什么|哪种)(钙片|保健品)[?？]?$": "calcium_supplement",
+        r"哪些食物含钙高[?？]?$": "calcium_food",
+
+        r"(平时)?(应该)?(怎么|如何)补铁[?？]?$": "iron_supplement",
+        r"贫血(应该)?(吃|补)(什么|点)铁剂[?？]?$": "iron_supplement",
+
+        r"维生素C(应该)?(怎么|如何)补充[?？]?$": "vitamin_c_supplement",
+        r"吃维生素C(有)?(什么|哪些)好处[?？]?$": "vitamin_c_benefits",
+
+        r"蛋白粉(应该)?(怎么|如何)吃[?？]?$": "protein_powder_usage",
+        r"(健身|运动)后(应该)?(喝|吃)蛋白粉吗[?？]?$": "protein_powder_usage",
+
+        # 4. 母婴健康
+        r"孕妇(的)?(饮食|吃[什么東西]|食物)(注意|禁忌)(事项)?[?？]?$": "pregnancy_diet",
+        r"孕妇(应该)?(补充|吃)(什么|哪些)营养(素)?[?？]?$": "pregnancy_nutrition",
+        r"孕妇不能(吃|做)(什么|哪些)(事情|东西)[?？]?$": "pregnancy_taboo",
+
+        r"哺乳期(的)?(饮食|吃[什么東西]|食物)(注意|禁忌)(事项)?[?？]?$": "breastfeeding_diet",
+        r"哺乳期(可以|不能)(吃|喝)(什么|哪些)(东西|食物|药)[?？]?$": "breastfeeding_diet",
+
+        r"宝宝|婴儿(的)?(辅食|食物)(怎么|如何)添加[?？]?$": "baby_food_intro",
+        r"(几个月|多大)的宝宝可以吃(什么|哪种)辅食[?？]?$": "baby_food_intro",
+
+        # 5. 日常保健与生活方式
+        r"(平时)?(应该)?(怎么|如何)减肥[?？]?$": "weight_loss_general",
+        r"健康(的)?减肥(的)?(饮食|食谱)(建议)?[?？]?$": "weight_loss_diet",
+        r"减肥(应该)?(做)?(什么|哪些)运动[?？]?$": "weight_loss_exercise",
+
+        r"(平时)?(应该)?(怎么|如何)健身[?？]?$": "fitness_general",
+        r"增肌(应该)?(怎么|如何)吃[?？]?$": "muscle_gain_diet",
+
+        r"(改善|提高)睡眠质量(的)?(方法|建议)[?？]?$": "sleep_improvement",
+        r"失眠(了)?(应该)?(怎么办|怎么调理)[?？]?$": "insomnia_relief",
+
+        r"(保护|爱护)眼睛(的)?(方法|建议)[?？]?$": "eye_care",
+        r"(长时间)?看电脑|手机(应该)?(怎么|如何)护眼[?？]?$": "eye_care",
+
+        r"提高免疫力(的)?(方法|建议)[?？]?$": "immunity_boost",
+    }
+
+    for pattern, intent_name in CLEAR_INTENT_PATTERNS.items():
+        if re.search(pattern, query_lower):
+            # 匹配到明确意图，直接返回“无需澄清”
+            return False, []
+    # ============ 新增代码结束 ============
     # 1. 文本长度检测
     if len(query_lower) < 5:
         results.append({
@@ -281,6 +363,7 @@ def _detect_ambiguity(query: str) -> Tuple[bool, List[Dict]]:
     results = []
     query_lower = query.strip().lower()
     
+   
     # 检查是否有歧义术语
     for term, info in AMBIGUOUS_TERMS.items():
         if term in query_lower:
@@ -302,7 +385,7 @@ def _detect_ambiguity(query: str) -> Tuple[bool, List[Dict]]:
     
     # 检查健康领域的其他常见歧义
     health_ambiguities = [
-        ("血压", ["血压值", "血压状况"]),
+        ("血压", ["血压值", "状况"]),
         ("血糖", ["血糖值", "血糖状况"]),
         ("血脂", ["血脂值", "血脂状况"]),
         ("营养", ["营养补充", "营养状况", "营养学"]),
@@ -725,7 +808,7 @@ def _needs_clarification(query: str, turn_count: int, conversation_history: List
     if symptom_context and ambiguous_results:
         # 定义症状相关的歧义术语白名单
         symptom_related_ambiguities = {
-            "general": ["苹果", "血压", "低血糖", "过敏", "营养", "锻炼", "治疗", "药", "检查", "炎症"],  # 新增：通用健康咨询中的常见歧义词
+            "general": ["苹果","低血糖", "过敏", "营养", "锻炼", "治疗", "药", "检查", "炎症"],  # 新增：通用健康咨询中的常见歧义词
             "headache": ["疼痛", "痛", "不适", "症状"],
             "stomach": ["肚子", "胃", "腹部", "腹泻", "便秘", "胀气"],
             "fever": ["发烧", "发热", "体温", "温度"],
@@ -979,12 +1062,6 @@ B. 苹果公司产品（对健康的影响）
 
 请选择A或B。""",
     
-     "ambiguity_blood_pressure": """您是想了解：
-A. 血压的测量值和正常范围
-B. 高血压/低血压的健康管理
-C. 血压相关的症状
-
-请选择A-C。""",
     
 }
 
@@ -1040,8 +1117,6 @@ def generate_clarification_question(query: str, session_state: dict, detection_r
             term = ambiguous_terms[0].get("term", "")
             if term == "苹果":
                 return f"{opening}{CLARIFICATION_TEMPLATES['ambiguity_apple']}"
-            elif term == "血压":
-                return f"{opening}{CLARIFICATION_TEMPLATES['ambiguity_blood_pressure']}"
             else:
                 suggestion = ambiguous_terms[0].get("suggestion", "请明确您所指的具体含义")
                 return f"{opening}{suggestion}"
@@ -1343,14 +1418,6 @@ class EnhancedDialogueManager:
             }
             return duration_mapping.get(option, f"选项{option}")
         
-        elif "血压的测量值和正常范围" in question_text or "血压相关的症状" in question_text:
-            # 血压相关选项映射
-            bp_mapping = {
-                "A": "血压的测量值和正常范围",
-                "B": "高血压/低血压的健康管理", 
-                "C": "血压相关的症状"
-            }
-            return bp_mapping.get(option, f"选项{option}")
         
         elif "肚子不舒服时，最明显的感觉是" in question_text or "最明显的感觉是" in str(question_text):
             # 胃部症状选项映射
@@ -1385,15 +1452,6 @@ class EnhancedDialogueManager:
                 "G": "其他症状"
             }
             return symptom_mapping.get(option, f"选项{option}")
-        
-        elif "您是想了解" in question_text and "血压" in question_text:
-            # 血压澄清选项映射
-            bp_mapping = {
-                "A": "血压的测量值和正常范围",
-                "B": "高血压/低血压的健康管理",
-                "C": "血压相关的症状"
-            }
-            return bp_mapping.get(option, f"选项{option}")
         
         elif "除了发烧，有没有其他症状" in question_text or "除了发烧，有没有其他症状" in str(question_text):
             # 发烧伴随症状选项映射
